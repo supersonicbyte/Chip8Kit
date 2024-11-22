@@ -1,9 +1,3 @@
-//
-//  Chip8.swift
-//  chip8
-//
-//  Created by Mirza Ucanbarlic on 26. 3. 2022..
-//
 
 import Foundation
 
@@ -19,19 +13,19 @@ fileprivate enum Chip8Error: Error {
 
 fileprivate struct Stack<T> {
     private var array: [T]
-    
+
     func top() -> T? {
         return array.last
     }
-    
+
     mutating func push(_ newElement: T) {
         array.append(newElement)
     }
-    
+
     mutating func pop() -> T? {
         return array.popLast()
     }
-    
+
     init() {
         array = []
     }
@@ -74,7 +68,7 @@ public struct Chip8 {
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     ]
-    
+
     var vx: Int {
         return Int((opcode & 0x0F00) >> 8)
     }
@@ -88,13 +82,13 @@ public struct Chip8 {
     var address: Word {
         return opcode & 0x0FFF
     }
-    
+
     public init() {
         for i in fontset.startIndex ..< fontset.endIndex {
             memory[Constants.fontsetStartAddress + i] = fontset[i]
         }
     }
-    
+
     public mutating func reset() {
         for i in 0..<registers.count {
             registers[i] = 0
@@ -113,7 +107,7 @@ public struct Chip8 {
             keypad[i] = 0
         }
     }
-    
+
     public mutating func loadROM(from data: Data) throws {
         if data.count > memory.count - Constants.startAddress {
             throw Chip8Error.dataToLarge
@@ -122,13 +116,13 @@ public struct Chip8 {
             memory[Constants.startAddress + i] = data[i]
         }
     }
-    
+
     /// CLS
     /// Clear the display
     mutating func op00E0() {
         video = [UInt32](repeating: 0, count: Constants.videoHeight * Constants.videoWidth)
     }
-    
+
     /// RET
     /// Return from a subroutine
     mutating func op00EE() {
@@ -137,20 +131,20 @@ public struct Chip8 {
         }
         pc = top
     }
-    
+
     /// JP addr
     /// Jump to address nnn
     mutating func op1nnn() {
         pc = address
     }
-    
+
     /// CALL addr
     /// Call subroutine at nnn
     mutating func op2nnn() {
         stack.push(pc)
         pc = address
     }
-    
+
     /// SE vx, byte
     /// Skip next instruction if vx == kk
     mutating func op3xkk() {
@@ -158,7 +152,7 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     /// SNE vx, byte
     /// Skip next instruction if vx  != kk
     mutating func op4xkk() {
@@ -166,7 +160,7 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     /// SE vx, vy
     /// Skip next instruction if vx == vy
     mutating func op5xy0() {
@@ -174,43 +168,43 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     // LD vx, byte
     /// Set vx = kk
     mutating func op6xkk() {
         registers[vx] = byte
     }
-    
+
     /// ADD vx, byte
     /// Set vx = vx + kk
     mutating func op7xkk() {
         registers[vx] = registers[vx] &+ byte
     }
-    
+
     /// LD vx, vy
     /// Set vx = vy
     mutating func op8xy0() {
         registers[vx] = registers[vy]
     }
-    
+
     /// OR vx, vy
     /// Set vx  = vx OR vy
     mutating func op8xy1() {
         registers[vx] = registers[vx] | registers[vy]
     }
-    
+
     /// AND vx, vy
     /// Set vx = vx AND vy
     mutating func op8xy2() {
         registers[vx] = registers[vx] & registers[vy]
     }
-    
+
     /// XOR vx, vy
     /// Set vx = vx XOR vy
     mutating func op8xy3() {
         registers[vx] = registers[vx] ^ registers[vy]
     }
-    
+
     /// ADD vx, vy
     /// Set vx  = vx + vy, set vf = carry
     mutating func op8xy4() {
@@ -222,7 +216,7 @@ public struct Chip8 {
         }
         registers[vx] = UInt8(sum & 0xFF)
     }
-    
+
     /// SUB vx, vy
     /// Set vx = vx - vy, set vf = NOT borrow
     mutating func op8xy5() {
@@ -233,7 +227,7 @@ public struct Chip8 {
         }
         registers[vx] = registers[vx] &- registers[vy]
     }
-    
+
     /// SHR vx
     /// Set vx = vx shr 1
     /// If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
@@ -241,7 +235,7 @@ public struct Chip8 {
         registers[0xF] = (registers[vx] & 0x1)
         registers[vx] = registers[vx] >> 1
     }
-    
+
     /// SUBN vx, vy
     /// Set vx = vy - vx, set VF = NOT borrow
     mutating func op8xy7() {
@@ -252,7 +246,7 @@ public struct Chip8 {
         }
        registers[vx] = registers[vy] &- registers[vx]
     }
-    
+
     /// SHL vx
     /// Set vx = vx SHL 1.
     /// If the most-significant bit of vx is 1, then vf is set to 1, otherwise to 0. Then vx is multiplied by 2.
@@ -260,7 +254,7 @@ public struct Chip8 {
         registers[0xF] = (registers[vx] & 0x80 >> 7)
         registers[vx] = registers[vx] << 1
     }
-    
+
     /// SNE vx, vy
     /// Skip next instruction if vx != vy
     mutating func op9xy0() {
@@ -268,13 +262,13 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     /// LD I, addr
     /// Set I = nnn
     mutating func opAnnn() {
         index = address
     }
-    
+
     /// JP v0, addr
     /// Jumpt o location nnn + v0
     mutating func opBnnn() {
@@ -285,7 +279,7 @@ public struct Chip8 {
     mutating func opCxkk() {
         registers[vx] = UInt8.random(in: 0..<225) & byte
     }
-    
+
     /// DRW vx, vy, nibble
     /// Display n-byte sprite starting at memory location I at (vx, vy), set vf = collision
     /// We iterate over the sprite, row by row and column by column. We know there are eight columns because a sprite is guaranteed to be eight pixels wide.
@@ -293,12 +287,12 @@ public struct Chip8 {
     /// Then we can just XOR the screen pixel with 0xFFFFFFFF to essentially XOR it with the sprite pixel (which we now know is on). We can’t XOR directly because the sprite pixel is either 1 or 0 while our video pixel is either 0x00000000 or 0xFFFFFFFF.
     mutating func opDxyn() {
         let height: Byte = Byte(opcode & 0x000F)
-        
+
         let xPos = registers[vx] % Byte(Constants.videoWidth)
         let yPos = registers[vy] % Byte(Constants.videoHeight)
-        
+
         registers[0xF] = 0
-        
+
         for row in 0..<height {
             let spriteByte: UInt8 = memory[Int(index + UInt16(row))]
             for col in 0..<8 {
@@ -314,7 +308,7 @@ public struct Chip8 {
             }
         }
     }
-    
+
     /// SKP vx
     /// Skip next instruction if key with the value of vx is pressed
     mutating func opEx9E() {
@@ -323,7 +317,7 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     /// SKNP vx
     /// Skip next instruction if key with the value of vx is not pressed
     mutating func opExA1() {
@@ -332,13 +326,13 @@ public struct Chip8 {
             pc += 2
         }
     }
-    
+
     /// LD vx, DT
     /// Set vx = delay timer value
     mutating func opFx07() {
         registers[vx] = delayTimer
     }
-    
+
     /// LD vx, K
     /// Wait for a key press, store the value fo the key in vx
     mutating func opFx0A() {
@@ -348,32 +342,32 @@ public struct Chip8 {
         }
         registers[vx] = UInt8(keypadIndex)
     }
-    
+
     /// LD DT, vx
     /// Set delay time = vx
     mutating func opFx15() {
         delayTimer = registers[vx]
     }
-    
+
     /// LD ST, vx
     /// Set sound time = vx
     mutating func opFx18() {
         soundTimer = registers[vx]
     }
-    
+
     /// ADD I, vx
     /// set i = i + vx
     mutating func opFx1E() {
         index += Word(registers[vx])
     }
-    
+
     /// LD F, vx
     /// Set I = location of sprite for digit vx
     mutating func opFx29() {
         let digit: Byte = registers[vx]
         index = Word(Constants.fontsetStartAddress) + Word((5 * digit))
     }
-    
+
     /// LD B, vx
     /// Store BCD representation of vx in memory locations I, I+1, and I+2
     mutating func opFx33() {
@@ -384,7 +378,7 @@ public struct Chip8 {
         value /= 10
         memory[Int(index)] = value % 10
     }
-    
+
     /// LD [I], vx
     /// Store regisers v0 thorugh vx in memory starting at location I
     mutating func opFx55() {
@@ -392,7 +386,7 @@ public struct Chip8 {
             memory[Int(index) + i] = registers[i]
         }
     }
-    
+
     /// LD vx, [I]
     /// Read registers v0 through vx from memory starting at location I
     mutating func opFx65() {
@@ -400,22 +394,22 @@ public struct Chip8 {
             registers[i] = memory[Int(index + UInt16(i))]
         }
     }
-    
+
     public mutating func cycle() {
         opcode = (Word(memory[Int(pc)]) << 8) | (Word(memory[Int(pc) + 1]))
         pc += 2
-                
+
         self.decode()
-        
+
         if delayTimer > 0 {
             delayTimer -= 1
         }
-        
+
         if soundTimer > 0 {
             soundTimer -= 1
         }
     }
-    
+
     mutating func decode() {
         let nibble = (opcode & 0xF000) >> 12
         switch nibble {
@@ -524,7 +518,7 @@ public extension Chip8 {
         }
         keypad[key] = 1
     }
-    
+
     mutating func deselect(key: Int) {
         guard key >= 0, key < 16 else {
             fatalError("Wrong key!")
