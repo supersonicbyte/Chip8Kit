@@ -72,7 +72,6 @@ class ViewController: UIViewController {
         slider.translatesAutoresizingMaskIntoConstraints = false
         slider.minimumValue = 200
         slider.maximumValue = 5000
-        slider.addTarget(self, action: #selector(sliderDidChange), for: .valueChanged)
         return slider
     }()
     
@@ -81,6 +80,7 @@ class ViewController: UIViewController {
         setupUI()
         configureDataSource()
         configureChip()
+        slider.addTarget(self, action: #selector(sliderDidChange), for: .valueChanged)
     }
     
     // MARK: Configure UI
@@ -210,7 +210,7 @@ class ViewController: UIViewController {
 extension ViewController {
     private func showRomPickerViewController() {
         let vc = RomPickerViewController()
-        vc.modalPresentationStyle = .popover
+        vc.modalPresentationStyle = .formSheet
         vc.delegate = self
         self.navigationController?.present(vc, animated: true, completion: nil)
     }
